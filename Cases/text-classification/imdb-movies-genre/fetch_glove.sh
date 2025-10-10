@@ -21,6 +21,6 @@ else
     exit 1
 fi
 
-echo "Арховируем для экономии места на диске"
+echo "Архивируем для экономии места на диске"
 zip glove.6B.300d.txt.zip glove.6B.300d.txt
 rm glove.6B.300d.txt

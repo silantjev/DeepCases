@@ -9,7 +9,7 @@
 
 ## Загрузка данных
 
-Скачать файл [https://drive.google.com/file/d/1vz4mSSIQl8mXSDBZ_OXfhbN0T1P1gHdr/view?usp=drive_link](imdb-movies-genre-data.zip)
+Скачать файл imdb-movies-genre-data.zip по ссылке https://drive.google.com/file/d/1vz4mSSIQl8mXSDBZ_OXfhbN0T1P1gHdr/view?usp=drive_link
 в папку data. Распаковать:
 ```bash
 cd data
@@ -36,13 +36,13 @@ rm glove.6B.300d.txt
 
 ## Установка зависимостей
 
-Рекомендуется использовать Python 3.12 и виртуальное окружение
+Рекомендуется использовать Python 3.11 и виртуальное окружение
 
 На ubuntu:
 ```bash
 sudo apt-get update
-sudo apt-get install python3.12
-python3.12 -m venv ".venv"
+sudo apt-get install python3.11
+python3.11 -m venv ".venv"
 source ".venv/bin/activate"
 ```
 

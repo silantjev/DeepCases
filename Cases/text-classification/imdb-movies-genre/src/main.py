@@ -31,8 +31,11 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 HISTORY_DIR = ROOT / 'history'
 PLOTS_DIR = ROOT / 'plots'
-assert HISTORY_DIR.is_dir()
-assert PLOTS_DIR.is_dir()
+if not HISTORY_DIR.is_dir():
+    HISTORY_DIR.mkdir()
+
+if not PLOTS_DIR.is_dir():
+    PLOTS_DIR.mkdir()
 
 # MAX_LENGTH = 2113
 
@@ -64,7 +67,8 @@ PIN_MEMORY = False
 # PIN_MEMORY = (str(DEVICE) == 'cpu')
 
 CHECKPOINTS_DIR = ROOT / 'checkpoints'
-assert CHECKPOINTS_DIR.is_dir()
+if not CHECKPOINTS_DIR.is_dir():
+    CHECKPOINTS_DIR.mkdir()
 
 name = NET_CLASS + f"_l{N_LAYERS}_h{HIDDEN_DIM}"
 if N_HEADS:
