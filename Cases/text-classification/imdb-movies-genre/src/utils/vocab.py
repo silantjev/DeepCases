@@ -26,7 +26,7 @@ def load_glove(path='glove.6B.300d.txt'):
         return keys, vectors
 
     if (abs_path.suffix == ".zip"):
-        with zipfile.ZipFile(str(abs_path), 'r') as zip_ref:  
+        with zipfile.ZipFile(str(abs_path), 'r') as zip_ref:
             with zip_ref.open('glove.6B.300d.txt', 'r') as file:
                 keys, vectors = parse_glove_file(file, is_binary=True)
     else:

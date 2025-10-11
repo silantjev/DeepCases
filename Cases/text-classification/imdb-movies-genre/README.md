@@ -53,7 +53,7 @@ pip install -r requirements.txt
 ```
 Установить нужный PyTorch
 ```bash
-pip3 install torch --index-url https://download.pytorch.org/whl/$xxx
+pip install torch --index-url https://download.pytorch.org/whl/$xxx
 ```
 где xxx=cpu или cu128 (указать куду нужной версии), см. https://docs.pytorch.org/get-started/locally
 
@@ -68,6 +68,16 @@ sudo apt-get update
 ./install_venv.sh cpu
 ```
 
+На windows (git bash):
+```bash
+python -m venv .venv
+source .venv/Scripts/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+xxx=cpu
+pip install torch --index-url https://download.pytorch.org/whl/$xxx
+```
+
 ## Использование common
 
 В коде используются общие модули из папки пакета `common`, лежащего в корне проекта.
@@ -78,7 +88,7 @@ ln -s ../../../../common common
 cd ..
 ```
 
-Либо можно добавить корень проекта в переменную PYTHONPATH
+Либо (в т.ч. на windows) можно добавить корень проекта в переменную PYTHONPATH (bash/git bash):
 ```bash
 export PYTHONPATH=$(realpath ../../..)${PYTHONPATH+:$PYTHONPATH}
 ```
@@ -87,12 +97,19 @@ export PYTHONPATH=$(realpath ../../..)${PYTHONPATH+:$PYTHONPATH}
 
 Разделение train.csv на train и val в пропорции 3:1
 ```bash
+python src/split_data.py
+```
+
+На linux (в bash) можно воспользоваться скриптом, который автоматически активирует виртуальное окружение:
+```bash
 ./run_split_data.sh
 ```
-Либо используйте скрипт `src/split_data.py`
 
 Предобработка данных:
 ```bash
+python src/prepare_data.py 
+```
+или
+```bash
 ./run_prepare_data.sh
 ```
-Либо используйте скрипт `src/prepare_data.py`

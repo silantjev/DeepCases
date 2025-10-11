@@ -26,7 +26,7 @@ class Loader:
         path = self.make_abs(path)
         if not path.is_file():
             return
-        return pd.read_csv(path)
+        return pd.read_csv(path, encoding='utf-8')
 
     def load_pq(self, path):
         path = self.make_abs(path)
@@ -38,7 +38,7 @@ class Loader:
         assert self.txt_path is not None
         if not self.txt_path.is_file():
             return []
-        with open(str(self.txt_path), 'r') as f:
+        with open(str(self.txt_path), 'r', encoding='utf-8') as f:
             first_line = f.readline()
         while first_line.endswith('\n'):
             first_line = first_line[:-1]
@@ -48,7 +48,7 @@ class Loader:
         assert self.txt_path is not None
         assert self.txt_path.parent.is_dir()
         assert self.txt_path.name.startswith('train')
-        with open(str(self.txt_path), 'w') as f:
+        with open(str(self.txt_path), 'w', encoding='utf-8') as f:
             f.write(' '.join(genres) + '\n')
 
     def save_pq(self, df, path):
