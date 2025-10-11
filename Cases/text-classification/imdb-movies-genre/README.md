@@ -68,6 +68,21 @@ sudo apt-get update
 ./install_venv.sh cpu
 ```
 
+## Использование common
+
+В коде используются общие модули из папки пакета `common`, лежащего в корне проекта.
+Чтобы работали импорты из `common`, необходимы символьные ссылки:
+```bash
+cd src
+ln -s ../../../../common common
+cd ..
+```
+
+Либо можно добавить корень проекта в переменную PYTHONPATH
+```bash
+export PYTHONPATH=$(realpath ../../..)${PYTHONPATH+:$PYTHONPATH}
+```
+
 ## Подготовка данных
 
 Разделение train.csv на train и val в пропорции 3:1

@@ -1,4 +1,3 @@
-import sys
 import os
 from datetime import datetime
 import logging
@@ -9,21 +8,16 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-#local imports
+# Импорт из общего кода
+from common.trainer import Trainer
+from common.log import make_logger
+from common import visualize
+from common.models.nlp_cls.rnn import RNNModel
+from common.models.nlp_cls.transformer import TransformerClassifier
+
+# Локальный импорт
 from utils.load_data import ROOT, save_npz
 from utils.seq_dataset import make_dataloader, packed_collate_fn
-PROJECT_ROOT = ROOT
-while (PROJECT_ROOT.name not in ['', '.', 'home', 'DeepCases']):
-    PROJECT_ROOT = PROJECT_ROOT.parent
-
-assert PROJECT_ROOT.name == 'DeepCases'
-
-sys.path.insert(0, str(PROJECT_ROOT / 'common'))
-from trainer import Trainer
-from log import make_logger
-import visualize
-from models.nlp_cls.rnn import RNNModel
-from models.nlp_cls.transformer import TransformerClassifier
 
 # os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"

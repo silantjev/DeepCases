@@ -1,19 +1,30 @@
-from sklearn.model_selection import train_test_split
+# Импорт из общего кода
+from common.data_preparation.split_dataset import split_df
 
-from utils.load_data import Loader
+# Локальный импорт
+from utils.load_data import Loader, ROOT
 
 # Делим train.csv на train и val, сохраняя результат в parquet-файлы
 
-def split_train(path='train.csv', val_percent=25):
+
+def split_and_save(path='train.csv', val_percent=25, test_percent=0):
     loader = Loader()
+    def save_part_df(df, name, percent):
+        path=f'{name}{percent}.pq'
+        loader.save_pq(df, path=path)
+        print(f"dataset \'{name}\' saved to \"{path}\"")
+
     df = loader.load_csv(path)
-    train_df, val_df = train_test_split(df, test_size=val_percent / 100, random_state=42, stratify=df['genre'])
-    train_path=f'train{100-val_percent}.pq'
-    loader.save_pq(train_df, path=train_path)
-    print(f"Train dataset saved to \"{train_path}\"")
-    val_path = f'val{val_percent}.pq'
-    loader.save_pq(val_df, path=val_path)
-    print(f"Validation dataset saved to \"{val_path}\"")
+    train_df, val_df, test_df = split_df(df, val_percent=val_percent, test_percent=test_percent, target='genre')
+
+
+    save_part_df(train_df, name='train', percent=100 - val_percent - test_percent)
+
+    save_part_df(val_df, name='val', percent=val_percent)
+
+    if test_percent:
+        assert test_df is not None
+        save_part_df(test_df, name='test', percent=test_percent)
 
 if __name__ == '__main__':
-    split_train()
+    split_and_save(path='train.csv')
