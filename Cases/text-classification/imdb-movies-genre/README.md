@@ -95,21 +95,41 @@ export PYTHONPATH=$(realpath ../../..)${PYTHONPATH+:$PYTHONPATH}
 
 ## Подготовка данных
 
-Разделение train.csv на train и val в пропорции 3:1
+### Разделение
+
+Отредактируйте файл `default_split_conf.json` (используется по умолчанию) или создайте свой такого же формата, задав в нём параметры для разделения данных:
+ - `val\_percent` — размер данных для валидации в процентах
+ - `test\_percent` — размер данных для итоговой оценки в процентах
+
+Разделение данных (по умолчанию train.csv) на train/val/test
 ```bash
-python src/split_data.py
+python src/split_data.py [-h] [--data DATA] [--conf CONF]
 ```
+где DATA — csv-файл с данными, CONF — конфигурационный json-файл с процентами
 
 На linux (в bash) можно воспользоваться скриптом, который автоматически активирует виртуальное окружение:
 ```bash
-./run_split_data.sh
+./run_split_data.sh [-h] [--data DATA] [--conf CONF]
 ```
 
-Предобработка данных:
+### Предобработка данных:
+
 ```bash
-python src/prepare_data.py 
+python src/prepare_data.py [-h] [--conf CONF]
 ```
 или
 ```bash
-./run_prepare_data.sh
+./run_prepare_data.sh [-h] [--conf CONF]
 ```
+где CONF — ровно тот же json-файл.
+
+## Обучение
+
+Задайте модель и параметры обучения в файле `train_conf.yaml` (используется по умолчанию) или в другом yaml-файле.
+
+Запустить обучение:
+```bash
+python main.py [-h] [--params PARAMS] [--conf CONF]
+```
+где CONF — тот же json-файл с процентами, а PARAMS — конфигурационный yaml-файл
+

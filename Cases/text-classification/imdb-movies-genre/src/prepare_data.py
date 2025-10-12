@@ -1,7 +1,9 @@
+import argparse
 from pathlib import Path
 import numpy as np
 
 #local imports
+from split_data import read_conf
 from utils.load_data import Loader
 from utils.genre_encoder import GenreEncoder
 from utils.tokenizator import Tokenizer
@@ -154,8 +156,20 @@ def main_val(filename, val_name):
     print(lengths[:5])
     print(y[:5])
 
+
+def take_args():
+    parser = argparse.ArgumentParser(description=f'Подготовить train и val', add_help=False) 
+
+    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='показать справку и выйти')
+    parser.add_argument('--conf', type=str, default=None, help='конфигурационный файл с процентами')
+
+    return parser.parse_args()
+
 if __name__ == '__main__':
-    train_name = 'train75'
-    val_name='val25'
+    args = take_args()
+    val_percent, test_percent = read_conf(path=args.conf)
+    train_percent = 100 - val_percent - test_percent
+    train_name = f'train{train_percent}'
+    val_name = f'val{val_percent}'
     main_train(train_name)
     main_val(filename=train_name, val_name=val_name)
