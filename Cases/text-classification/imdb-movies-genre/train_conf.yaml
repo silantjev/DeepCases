@@ -1,18 +1,18 @@
-# model: rnn
-model: transformer
-train_param:
-  epochs: 25
-  batch_size: 32
-  val_batch_size: 32
+model: rnn
+# model: transformer
+train_params:
+  epochs: 1
+  batch_size: 128
+  val_batch_size: 256
   lr: 1e-4
 model_params:
   rnn:
     net_class: gru
-    hidden_dim: 128
-    heads: 4
+    hidden_dim: 32
+    heads: 0
     dropout: 0.1
     dropout_lin: 0.2
-    layers: 2
+    layers: 1
     bidirectional: false
   transformer:
     feedforward_dim: 1200

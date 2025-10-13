@@ -20,7 +20,7 @@ from common.models.nlp_cls.rnn import RNNModel
 from common.models.nlp_cls.transformer import TransformerClassifier
 
 # Локальный импорт
-from split_data import read_conf
+from utils.json_conf import read_conf
 from utils.load_data import ROOT, save_npz
 from utils.seq_dataset import make_dataloader, packed_collate_fn
 from utils.config import Config
@@ -49,7 +49,7 @@ if yaml_path is None:
     yaml_path = "train_conf.yaml"
 yaml_path = find_file(yaml_path, root=ROOT)
 
-with open(yaml_path, "r") as f:
+with open(yaml_path, "r", encoding='utf-8') as f:
     config_dict = yaml.safe_load(f)
 
 try:
@@ -78,15 +78,6 @@ if n_heads != 0:
 elif config.model != 'rnn':
     raise ValueError(f"transformer should have at least one head")
 
-# TODO: create exp-dir
-HISTORY_DIR = ROOT / 'history'
-PLOTS_DIR = ROOT / 'plots'
-if not HISTORY_DIR.is_dir():
-    HISTORY_DIR.mkdir()
-
-if not PLOTS_DIR.is_dir():
-    PLOTS_DIR.mkdir()
-
 # MAX_LENGTH = 2113
 FINAL_ATTENTION = True # for transformer
 
@@ -96,19 +87,17 @@ def f1_macro(gt, pred):
 metric = f1_macro
 metric_name = metric.__name__ if hasattr(metric, "__name__") else 'metric'
 
-
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 PIN_MEMORY = False
 # PIN_MEMORY = (str(DEVICE) == 'cpu')
-
-CHECKPOINTS_DIR = ROOT / 'checkpoints'
-if not CHECKPOINTS_DIR.is_dir():
-    CHECKPOINTS_DIR.mkdir()
+EXPS_DIR = ROOT / 'exps'
+if not EXPS_DIR.is_dir():
+    EXPS_DIR.mkdir()
 
 if config.model == 'rnn':
-    name = model_params.net_class + "_h{model_params.hidden_dim}"
+    name = model_params.net_class + f"_d{model_params.hidden_dim}"
 else:
-    name = f"trans_ff{model_params.feedforward_dim}"
+    name = f"trans_d{model_params.feedforward_dim}"
 
 name += f"_l{model_params.layers}"
 
@@ -117,14 +106,40 @@ if n_heads:
 elif model_params.bidirectional:
     name += f"_D2"
 
+exp_name = name + datetime.now().strftime("_%Y-%m-%d_%H:%M:%S")
+exp_dir = EXPS_DIR / exp_name
+# print(f"{exp_dir=}")
+assert not exp_dir.exists(), f"Folder \"{exp_dir}\" already exists"
+exp_dir.mkdir()
+
+params = dict()
+params['params_file'] = yaml_path.name
+params['name'] = name
+params['date'] = datetime.now().strftime("%Y-%m-%d")
+params['time'] = datetime.now().strftime("%H:%M")
+params['data'] = {'train': train_name, 'val': val_name}
+params['model'] = config.model
+params['model_params'] = model_params.model_dump()
+params['train_params'] = train_params.model_dump()
+params['metric'] = metric_name
+
+with open(exp_dir / 'params.yaml', 'w', encoding='utf-8') as f:
+    yaml.safe_dump(
+            params,
+            f,
+            default_flow_style=False,
+            sort_keys=False,
+            allow_unicode=True,
+            indent=2,
+        )
+
+# Логирование
 logger = make_logger(name=name, log_dir=ROOT / 'logs', level=logging.DEBUG)
 logger.info("\n")
 logger.info("New experiment. Model used: '%s'.\n\tModel parameters: %s;"
         "\n\tTrain parameters: %s; \n\tmetric name: %s.",
         config.model, repr(model_params),
         repr(config.train_params), metric_name)
-
-# quit()
 
 # Загрузчики данных
 trainloader = make_dataloader(
@@ -190,7 +205,7 @@ else:
 
 model = model.to(device=DEVICE)
 
-trainer = Trainer(device=DEVICE, checkpoints_dir=CHECKPOINTS_DIR, logger=logger)
+trainer = Trainer(device=DEVICE, best_checkpoint=exp_dir / (name + '_best.pt'), logger=logger)
 
 history = trainer.train_loop(model, trainloader, valloader, trainvalloader=trainvalloader,
         weight=class_weights,
@@ -202,13 +217,12 @@ history = trainer.train_loop(model, trainloader, valloader, trainvalloader=train
     )
 
 # Имя фала для графика и для сохранения history
-filename = datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + ".png"
 
-npz_path = HISTORY_DIR / filename
+npz_path = exp_dir / (name + "_history.npz")
 save_npz(path=npz_path, dict_to_save=history)
 
 # Построим график и сохраним в png-файл
-path = PLOTS_DIR / filename
+plot_path = exp_dir / (name + "_plot.png")
 visualize.compare_on_plot(history, logger=logger,
-        name=name, metric_name=metric_name, save_path=path)
+        name=name, metric_name=metric_name, save_path=plot_path)
 

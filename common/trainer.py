@@ -17,11 +17,11 @@ def accuracy(gt, pred):
 
 class Trainer:
     """ Обучение и оценка моделей """
-    def __init__(self, device, checkpoints_dir, logger):
+    def __init__(self, device, best_checkpoint, logger):
         self.device = device
         # if str(device).lower() != 'cpu':
             # torch.cuda.set_per_process_memory_fraction(0.5)
-        self.checkpoints_dir = checkpoints_dir
+        self.best_checkpoint = best_checkpoint 
         self.logger = logger
         self.train_metric = 0
         self.len_trainset = 0
@@ -162,9 +162,8 @@ class Trainer:
             if metric_on_val > best_metric:
                 best_metric = metric_on_val
                 best_epoch = epoch
-                self.checkpoint_path = self.checkpoints_dir / f'{self.logger.name}_ep{epochs}_best.pt'
-                torch.save(model.state_dict(), self.checkpoint_path)
+                torch.save(model.state_dict(), self.best_checkpoint)
         self.logger.info(f"Best {metric_name} on val: {best_metric:.3f}")
-        self.logger.info(f"Best checkpoints with this metric was saved to '%s' at epoch %d", self.checkpoint_path, best_epoch)
+        self.logger.info(f"Best checkpoint with this metric was saved to '%s' at epoch %d", self.best_checkpoint, best_epoch)
         return history
 
