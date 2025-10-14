@@ -7,7 +7,7 @@ DATA = ROOT / 'data'
 
 assert DATA.is_dir()
 
-class Loader:
+class IMDBDataManager:
     """ Сохранение/загрузка данных и состояний в файлы/из фалов"""
     def __init__(self, *, data_dir=DATA, txt_path=None):
         self.data_dir = Path(data_dir) # папка где лежат файлы
@@ -25,13 +25,13 @@ class Loader:
     def load_csv(self, path):
         path = self.make_abs(path)
         if not path.is_file():
-            return
+            return None
         return pd.read_csv(path, encoding='utf-8')
 
     def load_pq(self, path):
         path = self.make_abs(path)
         if not path.is_file():
-            return
+            return None
         return pd.read_parquet(path)
 
     def load_txt(self):
@@ -59,18 +59,7 @@ class Loader:
         path = self.make_abs(path).with_suffix('.npz')
         np.savez_compressed(path, **kwargs)
 
-    def load_xy(self, path, keys=['X', 'lengths', 'y']):
+    def load_xy(self, path, keys=('X', 'lengths', 'y')):
         path = self.make_abs(path).with_suffix('.npz')
         with np.load(path) as l:
             return [l[k] for k in keys]
-
-# Отдельные функции для сохранения/загрузки npz-данных
-def save_npz(path, dict_to_save):
-    for k, v in dict_to_save.items():
-        dict_to_save[k] = np.array(v)
-    path = Path(path).with_suffix('.npz')
-    np.savez_compressed(path, **dict_to_save)
-
-def load_npz(path):
-    with np.load(path) as data:
-        return dict(data)

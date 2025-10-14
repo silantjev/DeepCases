@@ -1,5 +1,4 @@
 import sys
-import argparse
 import os
 from datetime import datetime
 import logging
@@ -12,7 +11,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 # Импорт из общего кода
-from common.utils import find_file
+from common.utils import find_file, save_npz
 from common.trainer import Trainer
 from common.log import make_logger
 from common import visualize
@@ -21,25 +20,16 @@ from common.models.nlp_cls.transformer import TransformerClassifier
 
 # Локальный импорт
 from utils.json_conf import read_conf
-from utils.load_data import ROOT, save_npz
+from utils.imdb_data_manager import ROOT
 from utils.seq_dataset import make_dataloader, packed_collate_fn
 from utils.config import Config
+from utils.cli_args import take_args
 
 # os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
 torch.multiprocessing.set_sharing_strategy('file_system')
 
-
-def take_args():
-    parser = argparse.ArgumentParser(description=f'Обучение модели', add_help=False) 
-
-    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='показать справку и выйти')
-    parser.add_argument('--params', type=str, default=None, help='конфигурационный yaml-файл')
-    parser.add_argument('--conf', '--split-conf', type=str, default=None, help='конфигурационный json-файл с процентами')
-
-    return parser.parse_args()
-
-args = take_args()
+args = take_args(description='Обучение модели', params=True)
 val_percent, test_percent = read_conf(path=args.conf)
 train_percent = 100 - val_percent - test_percent
 train_name = f'train{train_percent}'
@@ -153,9 +143,8 @@ class_weights = trainset.class_weights
 embedding_dim = trainset.embedding_dim
 max_seq_len = trainset.max_length
 
-logger.debug(f"Data with %d classes loaded", len(trainset.class_weights))
-logger.info(f"{embedding_dim=}")
-logger.debug(f"{len(trainset)=}")
+logger.debug("Train data with %d classes loaded. Dataset size is %d", len(trainset.class_weights), len(trainset))
+logger.info("embedding_dim : %d", embedding_dim)
 
 # Отдельный загрузчик с теми же данными, но для подсчёта метрики в конце эпохи:
 trainvalloader = DataLoader(
@@ -174,7 +163,7 @@ valloader = make_dataloader(
         for_train=False,
         )
 valset = valloader.dataset
-logger.debug(f"{len(valset)=}")
+logger.debug("Validation data loaded. Dataset size is %d", len(valset))
 
 if config.model.startswith('trans'):
     model = TransformerClassifier(
@@ -204,6 +193,9 @@ else:
         )
 
 model = model.to(device=DEVICE)
+
+logger.info('Experiment directory: \"%s\"', exp_dir)
+logger.info('Model: %s', model)
 
 trainer = Trainer(device=DEVICE, best_checkpoint=exp_dir / (name + '_best.pt'), logger=logger)
 

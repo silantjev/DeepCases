@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.nn.utils.rnn import pack_sequence
 
-from .load_data import Loader
+from .imdb_data_manager import IMDBDataManager
 
 class SeqDataset(Dataset):
     """ Датасет для обучения и валидации
@@ -52,14 +52,14 @@ def packed_collate_fn(batch):
 def make_dataloader(path, vector_path=None, batch_size=None, num_workers=0, for_train=True, pin_memory=False, shuffle=None):
     if batch_size is None:
         batch_size = 32 if for_train else 128
-    loader = Loader()
-    path = loader.make_abs(path)
+    data_manager = IMDBDataManager()
+    path = data_manager.make_abs(path)
     if vector_path is None:
         vector_path = path.parent / (path.stem + '_vectors.npy')
     else:
-        vector_path = loader.make_abs(vector_path)
+        vector_path = data_manager.make_abs(vector_path)
     assert vector_path.exists()
-    X, lengths, y = loader.load_xy(path)
+    X, lengths, y = data_manager.load_xy(path)
     vectors = np.load(vector_path)
     dataset = SeqDataset(X, lengths, y, vectors, compute_y_weights=for_train)
     if shuffle is None:

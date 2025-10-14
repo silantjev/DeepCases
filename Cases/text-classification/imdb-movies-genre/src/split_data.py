@@ -4,20 +4,20 @@ import argparse
 from common.data_preparation.split_dataset import split_df
 
 # Локальный импорт
-from utils.load_data import Loader, ROOT
+from utils.imdb_data_manager import IMDBDataManager
 from utils.json_conf import read_conf
 
 # Делим train.csv на train и val, сохраняя результат в parquet-файлы
 
 
 def split_and_save(path='train.csv', val_percent=25, test_percent=0):
-    loader = Loader()
+    data_manager = IMDBDataManager()
     def save_part_df(df, name, percent):
         path=f'{name}{percent}.pq'
-        loader.save_pq(df, path=path)
+        data_manager.save_pq(df, path=path)
         print(f"dataset \'{name}\' saved to \"{path}\"")
 
-    df = loader.load_csv(path)
+    df = data_manager.load_csv(path)
     train_df, val_df, test_df = split_df(df, val_percent=val_percent, test_percent=test_percent, target='genre')
 
 

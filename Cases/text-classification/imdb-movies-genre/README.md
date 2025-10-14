@@ -131,5 +131,9 @@ python src/prepare_data.py [-h] [--conf CONF]
 ```bash
 python main.py [-h] [--params PARAMS] [--conf CONF]
 ```
+или
+```bash
+./run_model_training.sh [-h] [--params PARAMS] [--conf CONF]
+```
 где CONF — тот же json-файл с процентами, а PARAMS — конфигурационный yaml-файл
 

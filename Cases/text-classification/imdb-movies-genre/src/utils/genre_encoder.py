@@ -1,10 +1,10 @@
-from .load_data import Loader
+from .imdb_data_manager import IMDBDataManager
 
 class GenreEncoder:
     """ Кодировщик классов, в данном случае классы — жанры фильмов """
     def __init__(self, txt_path):
-        self.loader = Loader(txt_path=txt_path)
-        self.genres = self.loader.load_txt() # если файла ещё нет, то возвращается пустой список
+        self.data_manager = IMDBDataManager(txt_path=txt_path)
+        self.genres = self.data_manager.load_txt() # если файла ещё нет, то возвращается пустой список
         if self.genres:
             self._make_codes()
 
@@ -22,7 +22,7 @@ class GenreEncoder:
     def fit(self, train_y):
         """ Извлекаем жанры из тренировочных данных """
         self.genres = list(train_y.unique())
-        self.loader.save_txt(self.genres)
+        self.data_manager.save_txt(self.genres)
         self._make_codes()
 
     def encode(self, genre):

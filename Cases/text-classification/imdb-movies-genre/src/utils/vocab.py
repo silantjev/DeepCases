@@ -2,12 +2,12 @@ from pathlib import Path
 import zipfile
 import numpy as np
 
-from .load_data import Loader
+from .imdb_data_manager import IMDBDataManager
 
 
 def load_glove(path='glove.6B.300d.txt'):
     """ Загрузить векторы  """
-    abs_path = Loader().make_abs(path)
+    abs_path = IMDBDataManager().make_abs(path)
     if not abs_path.is_file() and abs_path.suffix != ".zip":
         abs_path = Path(str(abs_path) + '.zip')
     assert abs_path.is_file(), f"Neither file {path} nor {path}.zip not found"

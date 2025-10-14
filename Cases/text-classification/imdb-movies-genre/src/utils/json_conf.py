@@ -4,7 +4,7 @@ import json
 from common.utils import find_file
 
 # Локальный импорт
-from .load_data import ROOT
+from .imdb_data_manager import ROOT
 
 DEFAULT_PATH = ROOT / 'default_split_conf.json'
 

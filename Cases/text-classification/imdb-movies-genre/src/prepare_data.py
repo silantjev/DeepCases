@@ -1,13 +1,13 @@
-import argparse
 from pathlib import Path
 import numpy as np
 
 #local imports
 from split_data import read_conf
-from utils.load_data import Loader
+from utils.imdb_data_manager import IMDBDataManager
 from utils.genre_encoder import GenreEncoder
 from utils.tokenizator import Tokenizer
 from utils.vocab import make_vocab, Vocab
+from utils.cli_args import take_args
 
 class DataPreprocessor:
     """ Предобработчик данных.
@@ -26,15 +26,15 @@ class DataPreprocessor:
 
     def save_state(self, name):
         assert self.fitted
-        loader = Loader(txt_path=name + '_vocab.txt')
-        loader.save_txt(self.vocab.decoder)
-        vector_path = loader.make_abs(name + '_vectors.npy')
+        data_manager = IMDBDataManager(txt_path=name + '_vocab.txt')
+        data_manager.save_txt(self.vocab.decoder)
+        vector_path = data_manager.make_abs(name + '_vectors.npy')
         np.save(vector_path, self.vectors)
 
     def load_state(self, name):
-        loader = Loader(txt_path=name + '_vocab.txt')
-        decoder = loader.load_txt()
-        vector_path = loader.make_abs(name + '_vectors.npy')
+        data_manager = IMDBDataManager(txt_path=name + '_vocab.txt')
+        decoder = data_manager.load_txt()
+        vector_path = data_manager.make_abs(name + '_vectors.npy')
         self.vectors = np.load(vector_path)
         self.vocab = Vocab(decoder)
         # if not self.genre_encoder.ready():
@@ -112,14 +112,14 @@ class DataPreprocessor:
 
 def preprocess(path, do_fit=False, filename=None, unk_threshold=0.1, npz_path=None):
     """ Использование предобработчика собрано в данную функцию """
-    loader = Loader()
+    data_manager = IMDBDataManager()
     path = Path(path)
     train_mode = path.name.startswith('train') and do_fit
     if path.suffix == '.pq':
-        df = loader.load_pq(path)
+        df = data_manager.load_pq(path)
     elif path.suffix == '.csv':
         assert not train_mode
-        df = loader.load_csv(path)
+        df = data_manager.load_csv(path)
     else:
         raise ValueError(f"Wrong path extension '{path.suffix}'")
 
@@ -139,7 +139,7 @@ def preprocess(path, do_fit=False, filename=None, unk_threshold=0.1, npz_path=No
         data_preprocessor.save_state(filename)
     if npz_path is None:
         npz_path = path
-    loader.save_xy(npz_path, X=X, lengths=lengths, y=y)
+    data_manager.save_xy(npz_path, X=X, lengths=lengths, y=y)
     return X, lengths, y
 
 def main_train(train_name):
@@ -157,16 +157,8 @@ def main_val(filename, val_name):
     print(y[:5])
 
 
-def take_args():
-    parser = argparse.ArgumentParser(description=f'Подготовить train и val', add_help=False) 
-
-    parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='показать справку и выйти')
-    parser.add_argument('--conf', type=str, default=None, help='конфигурационный файл с процентами')
-
-    return parser.parse_args()
-
 if __name__ == '__main__':
-    args = take_args()
+    args = take_args(description=f'Подготовить train и val')
     val_percent, test_percent = read_conf(path=args.conf)
     train_percent = 100 - val_percent - test_percent
     train_name = f'train{train_percent}'
