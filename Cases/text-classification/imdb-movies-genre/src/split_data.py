@@ -1,11 +1,10 @@
 import argparse
 
 # Импорт изобщего кода
-from common.data_preparation.split_dataset import split_df
+from common import split_dataset, read_conf
 
 # Локальный импорт
-from utils.imdb_data_manager import IMDBDataManager
-from utils.json_conf import read_conf
+from utils.imdb_data_manager import IMDBDataManager, ROOT
 
 # Делим train.csv на train и val, сохраняя результат в parquet-файлы
 
@@ -18,7 +17,7 @@ def split_and_save(path='train.csv', val_percent=25, test_percent=0):
         print(f"dataset \'{name}\' saved to \"{path}\"")
 
     df = data_manager.load_csv(path)
-    train_df, val_df, test_df = split_df(df, val_percent=val_percent, test_percent=test_percent, target='genre')
+    train_df, val_df, test_df = split_dataset.split_df(df, val_percent=val_percent, test_percent=test_percent, target='genre')
 
 
     save_part_df(train_df, name='train', percent=100 - val_percent - test_percent)
@@ -40,6 +39,6 @@ def take_args(default_data_path='train.csv'):
 
 if __name__ == '__main__':
     args = take_args()
-    val_percent, test_percent = read_conf(path=args.conf)
+    val_percent, test_percent = read_conf(root=ROOT, path=args.conf)
     print(f"{val_percent=}, {test_percent=}")
     split_and_save(path=args.data, val_percent=val_percent, test_percent=test_percent)

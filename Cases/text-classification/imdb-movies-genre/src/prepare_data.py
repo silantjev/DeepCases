@@ -1,13 +1,15 @@
 from pathlib import Path
 import numpy as np
 
+# Импорт изобщего кода
+from common import make_arg_parser, read_conf
+
 #local imports
-from split_data import read_conf
-from utils.imdb_data_manager import IMDBDataManager
+from utils.imdb_data_manager import IMDBDataManager, ROOT
 from utils.genre_encoder import GenreEncoder
 from utils.tokenizator import Tokenizer
 from utils.vocab import make_vocab, Vocab
-from utils.cli_args import take_args
+
 
 class DataPreprocessor:
     """ Предобработчик данных.
@@ -158,8 +160,8 @@ def main_val(filename, val_name):
 
 
 if __name__ == '__main__':
-    args = take_args(description=f'Подготовить train и val')
-    val_percent, test_percent = read_conf(path=args.conf)
+    args = make_arg_parser(description=f'Подготовить train и val').parse_args()
+    val_percent, test_percent = read_conf(root=ROOT, path=args.conf)
     train_percent = 100 - val_percent - test_percent
     train_name = f'train{train_percent}'
     val_name = f'val{val_percent}'

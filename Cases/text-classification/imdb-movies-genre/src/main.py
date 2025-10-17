@@ -11,26 +11,22 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 # Импорт из общего кода
-from common.utils import find_file, save_npz
-from common.trainer import Trainer
-from common.log import make_logger
-from common import visualize
+from common import find_file, save_npz, Trainer, make_logger, make_arg_parser, visualize, read_conf
 from common.models.nlp_cls.rnn import RNNModel
 from common.models.nlp_cls.transformer import TransformerClassifier
+from common import nlp_cls_config
+
 
 # Локальный импорт
-from utils.json_conf import read_conf
 from utils.imdb_data_manager import ROOT
 from utils.seq_dataset import make_dataloader, packed_collate_fn
-from utils.config import Config
-from utils.cli_args import take_args
 
 # os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
 torch.multiprocessing.set_sharing_strategy('file_system')
 
-args = take_args(description='Обучение модели', params=True)
-val_percent, test_percent = read_conf(path=args.conf)
+args = make_arg_parser(description='Обучение модели', params=True).parse_args()
+val_percent, test_percent = read_conf(root=ROOT, path=args.conf)
 train_percent = 100 - val_percent - test_percent
 train_name = f'train{train_percent}'
 val_name = f'val{val_percent}'
@@ -43,7 +39,7 @@ with open(yaml_path, "r", encoding='utf-8') as f:
     config_dict = yaml.safe_load(f)
 
 try:
-    config = Config(**config_dict)
+    config = nlp_cls_config.Config(**config_dict)
 except ValidationError as exc:
     print("[Error]: failed to parse yaml-file.")
     print("Validation errors:\n")

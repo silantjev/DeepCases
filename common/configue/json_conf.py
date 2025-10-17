@@ -1,27 +1,26 @@
 import json
 
 # Импорт изобщего кода
-from common.utils import find_file
+from .. import find_file
 
-# Локальный импорт
-from .imdb_data_manager import ROOT
+DEFAULT_FILENAME = 'SPLIT_CONF.json'
 
-DEFAULT_PATH = ROOT / 'default_split_conf.json'
-
-def write_default_conf(path=DEFAULT_PATH):
-    default_values = {'val_percent': 25, 'test_percent': 0}
+def write_default_conf(path):
+    assert path.parent.is_dir()
+    default_values = {'val_percent': 20, 'test_percent': 10}
     with open(path, 'w', encoding="utf-8") as f:
         json.dump(default_values, f, indent=4)
     print(f"Default config '%s' created" % path)
     return default_values['val_percent'], default_values['test_percent']
 
-def read_conf(path=None, create_default=True):
+def read_conf(root, path=None, create_default=True):
+    assert root.is_dir(), f"{root} is not directory"
     if path is None:
-        path = DEFAULT_PATH
+        path = root / DEFAULT_FILENAME
         if not path.exists() and create_default:
             return write_default_conf(path)
 
-    path = find_file(path, root=ROOT)
+    path = find_file(path, root=root)
     with open(path, 'r', encoding="utf-8") as f:
         data = json.load(f)
     val_percent = data.get('val_percent')
