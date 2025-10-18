@@ -12,40 +12,78 @@ from torchvision.transforms import transforms as T
 
 # Импорт из общего кода
 from common import read_conf, find_file, save_npz, Trainer
-from common import make_logger, visualize, make_parser
+from common import make_logger, visualize
+from common import make_arg_parser, read_yaml, save_yaml, cv_cls_config
 from common.models.cv_cls.alexnet import create_cnn
 from common.models.cv_cls.resnet import make_resnet, LEVELS2FROZEN
+from common import accuracy
 
 # Локальный импорт
 from utils.flower_data_manager import FlowerDataManager, ROOT
 from utils.flower_dataset import FlowerDataSet
 
 
-# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+DEFAULT_YAML_FILENAME = "train_conf.yaml"
 
-RESNET = True
-LOAD_IMAGES = True
-EPOCHS = 25
-LR = 1e-4 # learning rate
-CHECKPOINTS_DIR = ROOT / 'checkpoints'
-# DEVICE = torch.device('cpu')
+args = make_arg_parser(description='Обучение модели', params=True).parse_args()
+val_percent, test_percent = read_conf(root=ROOT, path=args.conf)
+train_percent = 100 - val_percent - test_percent
+yaml_path = args.params
+if yaml_path is None:
+    yaml_path = DEFAULT_YAML_FILENAME
+yaml_path = find_file(yaml_path, root=ROOT)
+
+config = read_yaml(yaml_path=yaml_path, Config=cv_cls_config.Config)
+if config is None:
+    sys.exit(1)
+
+train_params = config.train_params
+
+batch_size = config.train_params.batch_size
+val_batch_size = config.train_params.val_batch_size
+
+model_params = config.model_params[config.model]
+
+metric = accuracy
+metric_name = metric.__name__ if hasattr(metric, "__name__") else 'metric'
+
 DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-if RESNET:
-    # IM_SIZE = 232
-    # BATCH_SIZE = 64
 
-    IM_SIZE = 345
-    BATCH_SIZE = 32
+EXPS_DIR = ROOT / 'exps'
+if not EXPS_DIR.is_dir():
+    EXPS_DIR.mkdir()
 
-    name = 'resnet'
-    FROZEN = 5 # (0, 2, 5, 6, 7, 8)
+name = config.model
+name += f"_sz{model_params.image_size}"
+
+if config.model == 'alexnet':
+    name += f"_fc{model_params.fc_feat}"
 else:
-    # IM_SIZE = 128
-    # BATCH_SIZE = 64
-    IM_SIZE = 256
-    BATCH_SIZE = 16
-    name = f'cnn_sz{IM_SIZE}'
+    name += f"_fr{model_params.frozen}"
 
+exp_name = name + datetime.now().strftime("_%Y-%m-%d_%H:%M:%S")
+exp_dir = EXPS_DIR / exp_name
+print(f"{exp_dir=}")
+assert not exp_dir.exists(), f"Folder \"{exp_dir}\" already exists"
+exp_dir.mkdir()
+
+params = dict()
+params['params_file'] = yaml_path.name
+params['name'] = name
+params['date'] = datetime.now().strftime("%Y-%m-%d")
+params['time'] = datetime.now().strftime("%H:%M")
+params['data'] = {'train_percent': train_percent, 'val_percent': val_percent}
+params['model'] = config.model
+params['model_params'] = model_params.model_dump()
+params['train_params'] = train_params.model_dump()
+params['metric'] = metric_name
+
+exp_yaml_path = exp_dir / 'params.yaml'
+ok = save_yaml(exp_yaml_path, params)
+if ok:
+    print(f"Parameters saved to \"{exp_yaml_path}\"")
+else:
+    print(f"Failed to save parameters to \"{exp_yaml_path}\"")
 
 logger = make_logger(name=name, log_dir=ROOT / 'logs', level=logging.DEBUG)
 logger.info(f"\nNew experiment: {LOAD_IMAGES=}, {EPOCHS=}, {DEVICE=}, {IM_SIZE=}, {LR=}, {BATCH_SIZE=}")
@@ -54,10 +92,12 @@ if RESNET:
     assert FROZEN in LEVELS2FROZEN
 
 # Загрузка первичных данных
-data_loader = FlowerDataLoader()
-logger.debug(f"FlowerDataLoader found data with {data_loader.num_classes} classes")
+data_loader = FlowerDataManager()
+logger.debug(f"FlowerDataManager found data with {data_loader.num_classes} classes")
 train_idx, train_labels, val_idx, val_labels, test_idx, test_labels = data_loader.split(
-        test_size=0.2, val_size=0.16)
+        test_size=test_percent / 100,
+        val_size=val_percent / 100,
+    )
 
 paths = data_loader.get_paths()
 

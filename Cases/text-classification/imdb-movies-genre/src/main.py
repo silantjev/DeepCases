@@ -3,9 +3,6 @@ import os
 from datetime import datetime
 import logging
 
-import yaml
-from pydantic import ValidationError
-from sklearn.metrics import f1_score
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -14,7 +11,8 @@ from torch.utils.data import DataLoader
 from common import find_file, save_npz, Trainer, make_logger, make_arg_parser, visualize, read_conf
 from common.models.nlp_cls.rnn import RNNModel
 from common.models.nlp_cls.transformer import TransformerClassifier
-from common import nlp_cls_config
+from common import nlp_cls_config, read_yaml, save_yaml
+from common import f1_macro
 
 
 # Локальный импорт
@@ -35,16 +33,8 @@ if yaml_path is None:
     yaml_path = "train_conf.yaml"
 yaml_path = find_file(yaml_path, root=ROOT)
 
-with open(yaml_path, "r", encoding='utf-8') as f:
-    config_dict = yaml.safe_load(f)
-
-try:
-    config = nlp_cls_config.Config(**config_dict)
-except ValidationError as exc:
-    print("[Error]: failed to parse yaml-file.")
-    print("Validation errors:\n")
-    print(exc.json(indent=2))
-    print(f"\nCheck your configuration yaml-file \"{yaml_path}\"")
+config = read_yaml(yaml_path, nlp_cls_config.Config)
+if config is None:
     sys.exit(1)
 
 train_params = config.train_params
@@ -66,9 +56,6 @@ elif config.model != 'rnn':
 
 # MAX_LENGTH = 2113
 FINAL_ATTENTION = True # for transformer
-
-def f1_macro(gt, pred):
-    return f1_score(gt, pred, average="macro")
 
 metric = f1_macro
 metric_name = metric.__name__ if hasattr(metric, "__name__") else 'metric'
@@ -109,15 +96,12 @@ params['model_params'] = model_params.model_dump()
 params['train_params'] = train_params.model_dump()
 params['metric'] = metric_name
 
-with open(exp_dir / 'params.yaml', 'w', encoding='utf-8') as f:
-    yaml.safe_dump(
-            params,
-            f,
-            default_flow_style=False,
-            sort_keys=False,
-            allow_unicode=True,
-            indent=2,
-        )
+exp_yaml_path = exp_dir / 'params.yaml'
+ok = save_yaml(exp_yaml_path, params)
+if ok:
+    print(f"Parameters saved to \"{exp_yaml_path}\"")
+else:
+    print(f"Failed to save parameters to \"{exp_yaml_path}\"")
 
 # Логирование
 logger = make_logger(name=name, log_dir=ROOT / 'logs', level=logging.DEBUG)

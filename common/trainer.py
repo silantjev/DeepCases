@@ -2,6 +2,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 from torch import nn
+from .utils.metrics import accuracy
 
 def freeze(model):
     for param in model.parameters():
@@ -10,10 +11,6 @@ def freeze(model):
 def unfreeze(model):
     for param in model.parameters():
         param.requires_grad = True
-
-def accuracy(gt, pred):
-    assert len(gt) == len(pred)
-    return (gt == pred).mean()
 
 class Trainer:
     """ Обучение и оценка моделей """
@@ -63,8 +60,8 @@ class Trainer:
         for k in ['predictions', 'g_truth']:
             out_dict[k] = np.concatenate(out_dict[k])
         metric_values = []
-        for metric in metrics:
-            metric_value = metric(out_dict['g_truth'], out_dict['predictions'])
+        for metric_fn in metrics:
+            metric_value = metric_fn(out_dict['g_truth'], out_dict['predictions'])
             if type(metric_value) not in [float, int]:
                 metric_value = metric_value.item()
             metric_values.append(metric_value)
