@@ -1,6 +1,6 @@
 model: alexnet
 #model: resnet
-train_param:
+train_params:
   epochs: 25
   batch_size: 32
   val_batch_size: 32

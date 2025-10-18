@@ -43,7 +43,7 @@ class FlowerDataManager:
         return imagelabels - 1 # от нуля
 
     def _load_class_names(self):
-        with open('data/cat_to_name.json') as f:
+        with open(DATA / 'cat_to_name.json') as f:
             flower_classes = json.load(f)
         return {int(label) - 1: name for label, name in flower_classes.items()}
 

@@ -43,7 +43,7 @@ class ConvBlock(nn.Module):
 
 
 def create_cnn(logger=None, conv_feats=None, fc_feats=512,
-                    out_dim=102, im_size=IM_SIZE):
+                    out_dim=102, im_size=IM_SIZE, dropout=0.0):
     if conv_feats is None:
         conv_feats = (128, 128, 256, 256, 512, 512)
     assert len(conv_feats) == 6
@@ -61,24 +61,24 @@ def create_cnn(logger=None, conv_feats=None, fc_feats=512,
                         kernel_size=3, logger=logger),
         'L1C2': ConvBlock(in_features=conv_feats[0], out_features=conv_feats[1],
                         kernel_size=3, maxpooling=2, logger=logger),
-        'D1': nn.Dropout2d(0.2),
+        'D1': nn.Dropout2d(dropout),
         'L2C1': ConvBlock(in_features=conv_feats[1], out_features=conv_feats[2],
                         kernel_size=3, logger=logger),
         'L2C2': ConvBlock(in_features=conv_feats[2], out_features=conv_feats[3],
                         kernel_size=3, maxpooling=2, logger=logger),
-        'D2': nn.Dropout2d(0.25),
+        'D2': nn.Dropout2d(dropout),
         'L3C1': ConvBlock(in_features=conv_feats[3], out_features=conv_feats[4],
                         kernel_size=3, logger=logger),
         'L3C2': ConvBlock(in_features=conv_feats[4], out_features=conv_feats[5],
                         kernel_size=3, maxpooling=2, logger=logger),
-        'D3': nn.Dropout2d(0.25),
+        'D3': nn.Dropout2d(dropout),
         'FLAT': nn.Flatten(),
         'FC1': nn.Sequential(
                     nn.Linear(in_features=flatten_output_dim, out_features=fc_feats),
                     nn.ReLU(),
                 ),
         'FC2': nn.Sequential(
-                    nn.Dropout(0.25),
+                    nn.Dropout(dropout),
                     nn.Linear(in_features=fc_feats, out_features=out_dim),
                 ),
     }))

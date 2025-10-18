@@ -1,8 +1,7 @@
-import sys
 import yaml
 from pydantic import ValidationError
 
-def read_yaml(yaml_path, Config):
+def read_yaml(yaml_path):
     config_dict = None
     try:
         with open(yaml_path, "r", encoding='utf-8') as f:
@@ -26,21 +25,19 @@ def read_yaml(yaml_path, Config):
     if not isinstance(config_dict, dict):
         print(f"[Error] Expected dict in YAML config, got {type(config_dict)}")
         return None
+    return config_dict
 
-    try:
-        config = Config(**config_dict)
-    except (ValidationError, AssertionError) as exc:
-        print("[Error]: failed to parse yaml-file.")
-        print("Validation errors:\n")
-        if isinstance(exc, ValidationError):
-            print(exc.json(indent=2))
-        else:
-            print(exc)
-        print(f"\nCheck your configuration yaml-file \"{yaml_path}\"")
-        print(f"You can find a sample in the directory \"Config_samples\"")
-        return None
 
-    return config
+def print_pydantic_validation_errors(exc, yaml_path):
+    print("[Error]: failed to parse yaml-file.")
+    print("Validation errors:\n")
+    if isinstance(exc, ValidationError):
+        print(exc.json(indent=2))
+    else:
+        print(exc)
+    print(f"\nCheck your configuration yaml-file \"{yaml_path}\"")
+    print(f"You can find a sample in the directory \"Config_samples\"")
+
 
 def save_yaml(path, data):
     try:

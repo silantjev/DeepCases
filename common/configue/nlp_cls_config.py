@@ -36,26 +36,28 @@ class TransformerParams(NetParams):
 class Config(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
     model: str
-    train_params: TrainParams = Field(default_factory=TrainParams)
+    train_params: TrainParams
     model_params: dict[str, Any] = Field(default_factory=dict)
     
     @field_validator('model')
     @classmethod
     def validate_model(cls, v):
-        allowed_models = ['rnn', 'transformer']
+        allowed_models = {'rnn', 'transformer'}
         v = v.lower()
         if v not in allowed_models:
-            raise ValueError(f'Parameter "model" should be one of {allowed_models}')
+            raise ValueError(f"Parameter 'model' should be one of {allowed_models}")
         return v
 
     @model_validator(mode='after')
     def validate_model_params(self):  
-        assert self.model in self.model_params, f"{self.model=}, {self.model_params=}"
+        if self.model not in self.model_params:
+            raise ValueError(f"Field model absent in model_params: model = '{self.model}', while model_params are {set(self.model_params)}")
         params = self.model_params[self.model]
         if self.model == 'rnn':
             params = RNNParams(**params)
-        else:
-            assert self.model == 'transformer'
+        elif self.model == 'transformer':
             params = TransformerParams(**params)
+        else:
+            raise ValueError(f"Wrong parameter 'model': {self.model}")
         self.model_params = {self.model: params}
         return self

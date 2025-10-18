@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import logging
 
+from pydantic import ValidationError
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -11,7 +12,7 @@ from torch.utils.data import DataLoader
 from common import find_file, save_npz, Trainer, make_logger, make_arg_parser, visualize, read_conf
 from common.models.nlp_cls.rnn import RNNModel
 from common.models.nlp_cls.transformer import TransformerClassifier
-from common import nlp_cls_config, read_yaml, save_yaml
+from common import nlp_cls_config, read_yaml, save_yaml, print_pydantic_validation_errors
 from common import f1_macro
 
 
@@ -33,8 +34,14 @@ if yaml_path is None:
     yaml_path = "train_conf.yaml"
 yaml_path = find_file(yaml_path, root=ROOT)
 
-config = read_yaml(yaml_path, nlp_cls_config.Config)
-if config is None:
+config_dict = read_yaml(yaml_path)
+if config_dict is None:
+    sys.exit(1)
+
+try:
+    config = nlp_cls_config.Config(**config_dict)
+except ValidationError as exc:
+    print_pydantic_validation_errors(exc, yaml_path)
     sys.exit(1)
 
 train_params = config.train_params
@@ -174,6 +181,7 @@ else:
 
 model = model.to(device=DEVICE)
 
+# Обучение
 logger.info('Experiment directory: \"%s\"', exp_dir)
 logger.info('Model: %s', model)
 
@@ -182,14 +190,14 @@ trainer = Trainer(device=DEVICE, best_checkpoint=exp_dir / (name + '_best.pt'), 
 history = trainer.train_loop(model, trainloader, valloader, trainvalloader=trainvalloader,
         weight=class_weights,
         metric=metric,
-        lr=config.train_params.lr, epochs=config.train_params.epochs,
+        lr=config.train_params.lr,
+        epochs=config.train_params.epochs,
         optimizer_type=torch.optim.AdamW,
         loss_type=nn.CrossEntropyLoss,
         metric_during_epoch=False,
     )
 
 # Имя фала для графика и для сохранения history
-
 npz_path = exp_dir / (name + "_history.npz")
 save_npz(path=npz_path, dict_to_save=history)
 

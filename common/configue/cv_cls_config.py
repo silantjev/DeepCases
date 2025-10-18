@@ -12,12 +12,12 @@ class TrainParams(BaseModel):
 
 class CNNParams(BaseModel):
     image_size: int = Field(gt=0)
-    dropout: float = Field(default=0.0, ge=0.0, le=1.0)
 
 
 class AlexnetParams(CNNParams):
     fc_feat: int = 512
     conv_feats: tuple[int, int, int, int, int, int] | None = None
+    dropout: float = Field(default=0.0, ge=0.0, le=1.0)
 
     @field_validator('conv_feats')
     @classmethod
@@ -37,7 +37,7 @@ class ResnetParams(CNNParams):
 class Config(BaseModel):
     model_config = ConfigDict(protected_namespaces=())
     model: str
-    train_params: TrainParams = Field(default_factory=TrainParams)
+    train_params: TrainParams
     model_params: dict[str, Any] = Field(default_factory=dict)
     
     @field_validator('model')
