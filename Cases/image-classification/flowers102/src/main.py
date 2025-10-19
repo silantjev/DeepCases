@@ -197,7 +197,7 @@ visualize.compare_on_plot(history, logger=logger,
         name=name, metric_name=metric_name, save_path=plot_path)
 
 out_dict = {}
-metric_on_test = trainer.evaluation(model, test_dataloader, out_dict=out_dict)
+metric_on_test = trainer.evaluation(model, test_dataloader, out_dict=out_dict, metric=accuracy)
 logger.info("On test data: %s = %.3f", metric_name, metric_on_test)
 
 # visualize.show_evaluation_results(

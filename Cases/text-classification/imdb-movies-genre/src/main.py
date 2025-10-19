@@ -92,24 +92,6 @@ exp_dir = EXPS_DIR / exp_name
 assert not exp_dir.exists(), f"Folder \"{exp_dir}\" already exists"
 exp_dir.mkdir()
 
-params = dict()
-params['params_file'] = yaml_path.name
-params['name'] = name
-params['date'] = datetime.now().strftime("%Y-%m-%d")
-params['time'] = datetime.now().strftime("%H:%M")
-params['data'] = {'train': train_name, 'val': val_name}
-params['model'] = config.model
-params['model_params'] = model_params.model_dump()
-params['train_params'] = train_params.model_dump()
-params['metric'] = metric_name
-
-exp_yaml_path = exp_dir / 'params.yaml'
-ok = save_yaml(exp_yaml_path, params)
-if ok:
-    print(f"Parameters saved to \"{exp_yaml_path}\"")
-else:
-    print(f"Failed to save parameters to \"{exp_yaml_path}\"")
-
 # Логирование
 logger = make_logger(name=name, log_dir=ROOT / 'logs', level=logging.DEBUG)
 logger.info("\n")
@@ -130,7 +112,7 @@ class_weights = trainset.class_weights
 embedding_dim = trainset.embedding_dim
 max_seq_len = trainset.max_length
 
-logger.debug("Train data with %d classes loaded. Dataset size is %d", len(trainset.class_weights), len(trainset))
+logger.debug("Train data with %d classes loaded. Dataset size is %d", len(class_weights), len(trainset))
 logger.info("embedding_dim : %d", embedding_dim)
 
 # Отдельный загрузчик с теми же данными, но для подсчёта метрики в конце эпохи:
@@ -151,6 +133,30 @@ valloader = make_dataloader(
         )
 valset = valloader.dataset
 logger.debug("Validation data loaded. Dataset size is %d", len(valset))
+
+#сохраниние параметров в YALM-файл
+params = dict()
+params['params_file'] = yaml_path.name
+params['name'] = name
+params['date'] = datetime.now().strftime("%Y-%m-%d")
+params['time'] = datetime.now().strftime("%H:%M")
+params['data'] = {'train': train_name, 'val': val_name}
+params['model'] = config.model
+params['model_params'] = model_params.model_dump()
+params['train_params'] = train_params.model_dump()
+params['metric'] = metric_name
+params['n_classes'] = len(class_weights)
+params['max_seq_len'] = max_seq_len
+
+exp_yaml_path = exp_dir / 'params.yaml'
+ok = save_yaml(exp_yaml_path, params)
+if ok:
+    logger.debug(f"Parameters saved to \"%s\"", exp_yaml_path)
+else:
+    logger.debug(f"Failed save parameters to \"%s\"", exp_yaml_path)
+
+
+# Модель
 
 if config.model.startswith('trans'):
     model = TransformerClassifier(

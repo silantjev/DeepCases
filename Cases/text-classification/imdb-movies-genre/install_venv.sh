@@ -16,16 +16,16 @@ pip install -r requirements.txt
 
 if [[ -n $1 ]]; then
     echo "Установка PyTorch \"$1\""
-    pip install --upgrade --force-reinstall torch --index-url "https://download.pytorch.org/whl/$1"
+    pip install --force-reinstall torch==2.9.0 --index-url "https://download.pytorch.org/whl/$1"
     exit 0
 fi
 
 if lspci | grep -i nvidia > /dev/null; then
     echo "Установка GPU-версии PyTorch"
-    pip install --upgrade torch
+    pip install torch==2.9.0
 else
     echo "Установка CPU-версии PyTorch"
-    pip install --upgrade torch --index-url https://download.pytorch.org/whl/cpu
+    pip install torch==2.9.0 --index-url https://download.pytorch.org/whl/cpu
 fi
 
 echo "Установка зависимостей прошла успешно"

@@ -167,3 +167,6 @@ if __name__ == '__main__':
     val_name = f'val{val_percent}'
     main_train(train_name)
     main_val(filename=train_name, val_name=val_name)
+    if test_percent:
+        test_name = f'test{test_percent}'
+        main_val(filename=train_name, val_name=test_name)
