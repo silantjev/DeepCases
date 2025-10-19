@@ -1,11 +1,10 @@
 tqdm
-nltk
-contractions
 numpy
 pandas
-pyarrow
+scipy
 scikit-learn
 matplotlib
 seaborn
+opencv-python
 pydantic
 pyyaml
