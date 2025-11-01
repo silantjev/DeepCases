@@ -146,7 +146,7 @@ params['model_params'] = model_params.model_dump()
 params['train_params'] = train_params.model_dump()
 params['metric'] = metric_name
 params['n_classes'] = len(class_weights)
-params['max_seq_len'] = max_seq_len
+params['max_seq_len'] = int(max_seq_len)
 
 exp_yaml_path = exp_dir / 'params.yaml'
 ok = save_yaml(exp_yaml_path, params)

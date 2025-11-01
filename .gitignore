@@ -10,3 +10,5 @@ history/
 exps/
 orig/
 !Cases/image-classification/flowers102/data/cat_to_name.json
+uv.lock
+.python-version

@@ -39,25 +39,44 @@ rm glove.6B.300d.txt
 Рекомендуется использовать Python 3.11 и виртуальное окружение
 
 На ubuntu:
+---------
+
 ```bash
 sudo apt-get update
-sudo apt-get install python3.11
-python3.11 -m venv ".venv"
-source ".venv/bin/activate"
+sudo apt-get install python3.11 python3.11-venv
+```
+Если нужной версии python нет на ubuntu, то сначала подключить репозиторий
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
 ```
 
-Также необходимо установить модули:
+Виртуальное окружение (через `pip`):
+```bash
+python3.11 -m venv ".venv"
+source .venv/bin/activate
+```
+
+Также необходимо установить модули.
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 Установить нужный PyTorch
 ```bash
-pip install torch --index-url https://download.pytorch.org/whl/$xxx
+pip install torch==2.9.0 --index-url https://download.pytorch.org/whl/$xxx
 ```
-где xxx=cpu или cu128 (указать куду нужной версии), см. https://docs.pytorch.org/get-started/locally
+где xxx=cpu или cu128 (указать куду нужной версии или опустить --incex-url для cuda по умолчанию), см. https://docs.pytorch.org/get-started/locally
 
-Автоматически (ubuntu):
+Через `uv`:
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh # установка uv, если ещё нет
+uv venv --python /usr/bin/python3.11
+source .venv/bin/activate
+uv sync --extra torch-$xxx
+```
+
+`Автоматически`:
 ```bash
 rm -r .venv
 sudo apt-get update
