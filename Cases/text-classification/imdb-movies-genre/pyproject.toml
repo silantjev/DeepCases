@@ -8,6 +8,7 @@ dependencies = [
     "contractions==0.1.73",
     "matplotlib==3.10.6",
     "nltk==3.9.2",
+#    "numpy==2.3.4",
     "numpy==2.3.4",
     "pandas==2.3.3",
     "pyarrow==21.0.0",
