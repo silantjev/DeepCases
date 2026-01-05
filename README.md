@@ -77,7 +77,8 @@ cd ..
 
 Либо (в т.ч. на windows) можно добавить корень проекта в переменную PYTHONPATH (bash/git bash):
 ```bash
-export PYTHONPATH=$(realpath ../../..)${PYTHONPATH+:$PYTHONPATH}
+cd DeepCases
+export PYTHONPATH=$(realpath .)${PYTHONPATH+:$PYTHONPATH}
 ```
 
 
